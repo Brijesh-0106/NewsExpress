@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 
-const NewsItem = ({ title, detail, imageUrl, more, source, date }) => {
+const NewsItem = ({ title, detail, imageUrl, more, source, date, onAskAI }) => {
     const [imgError, setImgError] = useState(false);
 
     // High-quality default news placeholders based on source or just generic
     const defaultImg = "https://images.unsplash.com/photo-1585829365294-18d038555e03?auto=format&fit=crop&q=80&w=800";
 
     return (
-        <div className="news-card-wrapper">
+        <div className="news-card-wrapper" style={{ position: 'relative' }}>
             <div className="news-card" style={{ 
                 background: 'var(--bg-card)', 
                 borderRadius: 'var(--radius-md)', 
-                border: '1px solid var(--border)',
-                overflow: 'hidden',
-                transition: 'var(--transition)',
                 cursor: 'pointer',
                 position: 'relative'
             }}>
@@ -49,6 +46,25 @@ const NewsItem = ({ title, detail, imageUrl, more, source, date }) => {
                         }}>
                             {source}
                         </span>
+                    )}
+
+                    {/* AI Ask Button (shows on hover via CSS) */}
+                    {onAskAI && (
+                        <button 
+                            className="ask-ai-btn"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAskAI(`Tell me more about: ${title}`);
+                            }}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            Ask AI
+                        </button>
                     )}
                 </div>
                 
@@ -101,6 +117,35 @@ const NewsItem = ({ title, detail, imageUrl, more, source, date }) => {
                 </div>
             </div>
             <style>{`
+                .news-card-wrapper .ask-ai-btn {
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    background: var(--accent);
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    opacity: 0;
+                    transform: translateY(-5px);
+                    transition: all 0.2s ease;
+                    z-index: 10;
+                    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+                }
+                .news-card-wrapper:hover .ask-ai-btn {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                .news-card-wrapper .ask-ai-btn:hover {
+                    background: white;
+                    color: var(--accent);
+                }
                 .news-card:hover .card-img-main {
                     transform: scale(1.05);
                 }

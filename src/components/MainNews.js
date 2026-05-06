@@ -25,10 +25,9 @@ const MainNews = ({ country, category, pageSize }) => {
                 url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a`;
             }
 
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
-            const proxyData = await response.json();
-            const parsedData = JSON.parse(proxyData.contents);
+            const parsedData = await response.json();
 
             if (parsedData.status === "ok") {
                 const filtered = searchQuery 
@@ -109,6 +108,11 @@ const MainNews = ({ country, category, pageSize }) => {
                                     more={element.url} 
                                     source={element.source.name}
                                     date={element.publishedAt}
+                                    onAskAI={(query) => {
+                                        // Need to trigger the NewsAssistant.
+                                        // A quick way is to emit a custom event.
+                                        window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: query }));
+                                    }}
                                 />
                             ))}
                         </div>

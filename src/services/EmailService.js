@@ -3,7 +3,7 @@ import emailjs from 'emailjs-com';
 // Note: You need to create a free account at https://www.emailjs.com/
 // Then replace these placeholders with your actual IDs
 const SERVICE_ID = "service_a3rk1ym";
-const TEMPLATE_ID = "template_kqr6ihp";
+const TEMPLATE_ID = "template_3shbz28";
 const PUBLIC_KEY = "BerIYcUUdRExUBbPA";
 
 export const sendWelcomeEmail = async (userEmail, topHeadlines) => {
@@ -11,7 +11,7 @@ export const sendWelcomeEmail = async (userEmail, topHeadlines) => {
     const headlineList = topHeadlines.slice(0, 5).map((h, i) => `${i + 1}. ${h.title}`).join('\n');
 
     const templateParams = {
-        name: userEmail.split('@')[0], 
+        name: userEmail.split('@')[0],
         time: new Date().toLocaleString(),
         to_email: userEmail,
         subject: "Welcome to NewsExpress Digest!",

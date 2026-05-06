@@ -1,5 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import RAGService from '../services/RAGService';
+import { indexArticles } from '../services/RAGService';
+
+// Premium Markdown Parser for NOVA's responses
+const formatMarkdown = (text) => {
+    if (!text) return { __html: '' };
+    
+    let html = text
+        .replace(/---/g, '<hr style="border:0; height:1px; background:var(--accent); opacity:0.3; margin:15px 0" />')
+        .replace(/## (.*?)(?=\n|$)/g, '<h2 style="color:var(--accent); font-size:1.2rem; font-weight:800; margin-bottom:10px; letter-spacing:0.5px; text-transform:uppercase">$1</h2>')
+        .replace(/### (.*?)(?=\n|$)/g, '<h3 style="color:#fff; font-size:1.05rem; font-weight:700; margin:15px 0 8px 0">$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#fff; font-weight:700">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em style="color:#cbd5e1; font-style:italic">$1</em>')
+        .replace(/> (.*?)(?=\n|$)/g, '<blockquote style="border-left:3px solid var(--accent); margin:0 0 15px 0; padding-left:10px; color:#94a3b8; font-style:italic">$1</blockquote>')
+        .replace(/- (.*?)(?=\n|$)/g, '<li style="margin-bottom:6px; line-height:1.5">$1</li>');
+
+    // Wrap un-li'd bullets in a ul
+    html = html.replace(/(<li.*?>.*?<\/li>)+/g, '<ul style="margin:0 0 15px 20px; padding:0">$&</ul>');
+
+    // Handle normal paragraphs (double newline)
+    html = html.replace(/\n\n/g, '<br/><br/>');
+    // Handle single newlines inside blocks
+    html = html.replace(/\n/g, '<br/>');
+    
+    return { __html: html };
+};
 
 const NewsAssistant = ({ articles }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -18,14 +42,41 @@ const NewsAssistant = ({ articles }) => {
     ];
 
     useEffect(() => {
+        const handleOpenChat = (e) => {
+            setIsOpen(true);
+            if (e.detail) {
+                // Ensure we don't trigger multiple sends if it's already typing
+                // but we might want to let them anyway, so just use setTimeout to ensure state is ready
+                setTimeout(() => {
+                    handleSend(e.detail);
+                }, 300);
+            }
+        };
+
+        window.addEventListener('open-ai-chat', handleOpenChat);
+        return () => window.removeEventListener('open-ai-chat', handleOpenChat);
+    }, [localVectors]); // Depend on localVectors so handleSend uses the latest state
+
+    useEffect(() => {
         const indexData = async () => {
             if (articles.length > 0) {
-                const vectors = await RAGService.indexArticles(articles);
-                setLocalVectors(vectors);
+                // Only index articles that haven't been indexed yet (by URL)
+                const existingUrls = new Set(localVectors.map(v => atob(v.id))); // IDs are base64 URLs
+                const newArticles = articles.filter(art => !existingUrls.has(art.url));
+
+                if (newArticles.length === 0) return;
+
+                console.log(`Adding ${newArticles.length} new articles to index...`);
+                try {
+                    const newVectors = await indexArticles(newArticles);
+                    setLocalVectors(prev => [...prev, ...newVectors]);
+                } catch (e) {
+                    console.error("Indexing failed:", e);
+                }
             }
         };
         indexData();
-    }, [articles]);
+    }, [articles, localVectors]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,16 +91,26 @@ const NewsAssistant = ({ articles }) => {
         setIsTyping(true);
 
         try {
-            const matches = await RAGService.search(query, localVectors);
-            let response;
+            const { searchNews, generateAnswerStream } = await import('../services/RAGService');
+            const matches = await searchNews(query, localVectors);
+            
             if (matches.length > 0) {
-                response = `Analysis complete. Found a strong semantic match: "${matches[0].title}". \n\nKey Insights: ${matches[0].content}`;
+                // Add empty message to stream into
+                setMessages(prev => [...prev, { role: 'assistant', content: "" }]);
+                
+                await generateAnswerStream(query, matches, (chunk) => {
+                    setMessages(prev => {
+                        const newMsgs = [...prev];
+                        newMsgs[newMsgs.length - 1].content = chunk;
+                        return newMsgs;
+                    });
+                });
             } else {
-                response = "I've analyzed the vector space but couldn't find a direct match. Try asking about a different topic or category.";
+                setMessages(prev => [...prev, { role: 'assistant', content: "🚨 **NO DIRECT MATCH**\n---\nI couldn't find a specific match for that in today's vector index. Try asking about a broader topic!" }]);
             }
-            setMessages(prev => [...prev, { role: 'assistant', content: response }]);
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'assistant', content: "Vector engine error. Please refresh and try again." }]);
+            console.error("NewsAssistant Error:", err);
+            setMessages(prev => [...prev, { role: 'assistant', content: "⚠️ **SYSTEM ERROR**\n---\nSomething went wrong with the news engine. Please refresh and try again." }]);
         }
         setIsTyping(false);
     };
@@ -79,12 +140,22 @@ const NewsAssistant = ({ articles }) => {
                     boxShadow: '0 40px 80px rgba(0,0,0,0.8)',
                     overflow: 'hidden'
                 }}>
-                    <div style={{ background: '#12121e', padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ background: '#12121e', padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ width: '10px', height: '10px', background: 'var(--accent)', borderRadius: '50%', boxShadow: '0 0 15px var(--accent)' }}></div>
-                            <span style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>Intelligence Hub</span>
+                            <span style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'white' }}>NOVA Intelligence</span>
                         </div>
-                        <span onClick={() => setIsOpen(false)} style={{ cursor: 'pointer', opacity: 0.5, fontSize: '24px' }}>×</span>
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                            <button 
+                                onClick={() => setMessages([{ role: 'assistant', content: 'Hi! I am NOVA, your AI News Anchor. How can I help you explore today\'s top stories?' }])}
+                                style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '12px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}
+                                onMouseOver={(e) => { e.target.style.color = 'white'; e.target.style.borderColor = 'var(--text-muted)'; }}
+                                onMouseOut={(e) => { e.target.style.color = 'var(--text-muted)'; e.target.style.borderColor = 'var(--border)'; }}
+                            >
+                                Clear
+                            </button>
+                            <span onClick={() => setIsOpen(false)} style={{ cursor: 'pointer', opacity: 0.5, fontSize: '24px', color: 'white', transition: '0.2s' }} onMouseOver={(e)=>e.target.style.opacity=1} onMouseOut={(e)=>e.target.style.opacity=0.5}>×</span>
+                        </div>
                     </div>
 
                     <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -98,9 +169,18 @@ const NewsAssistant = ({ articles }) => {
                                 fontSize: '14px',
                                 lineHeight: '1.6',
                                 color: m.role === 'user' ? 'white' : '#cbd5e1',
-                                border: m.role === 'user' ? 'none' : '1px solid var(--border)'
+                                border: m.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                boxShadow: m.role === 'user' ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none',
+                                overflow: 'hidden'
                             }}>
-                                {m.content}
+                                {m.role === 'user' ? (
+                                    m.content
+                                ) : (
+                                    <div 
+                                        className="nova-markdown"
+                                        dangerouslySetInnerHTML={formatMarkdown(m.content + '\n')} 
+                                    />
+                                )}
                             </div>
                         ))}
                         {isTyping && (
