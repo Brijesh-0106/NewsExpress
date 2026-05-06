@@ -7,7 +7,7 @@ const NavBar = () => {
     const navigate = useNavigate();
 
     const categories = [
-        { name: 'General', path: '/' },
+        { name: 'Top Stories', path: '/feed' },
         { name: 'Business', path: '/business' },
         { name: 'Entertainment', path: '/entertainment' },
         { name: 'Health', path: '/health' },

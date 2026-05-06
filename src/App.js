@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import NavBar from './components/NavBar';
 import MainNews from './components/MainNews';
+import Landing from './components/Landing';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App = () => {
@@ -16,7 +17,8 @@ const App = () => {
 
         <main>
           <Routes>
-            <Route path='/' element={<MainNews key={favoriteCategory} pageSize={pageSize} country={country} category={favoriteCategory} />} />
+            <Route path='/' element={<Landing />} />
+            <Route path='/feed' element={<MainNews key={favoriteCategory} pageSize={pageSize} country={country} category={favoriteCategory} />} />
             <Route path='/business' element={<MainNews key='business' pageSize={pageSize} country={country} category='business' />} />
             <Route path='/entertainment' element={<MainNews key='entertainment' pageSize={pageSize} country={country} category='entertainment' />} />
             <Route path='/health' element={<MainNews key='health' pageSize={pageSize} country={country} category='health' />} />
