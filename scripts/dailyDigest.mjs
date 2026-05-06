@@ -1,16 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
+import WebSocket from 'ws';
 
 // We use environment variables that will be provided by GitHub Actions
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a"; // Using the key from your MainNews.js
+const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a"; 
 const emailjsServiceId = "service_v1v057d";
 const emailjsTemplateId = "template_u19k93u";
 const emailjsPublicKey = "BerIYcUUdRExUBbPA";
 const emailjsPrivateKey = process.env.REACT_APP_EMAILJS_PRIVATE_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Initialize Supabase with WebSocket support for Node.js
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false },
+    realtime: { websocket: WebSocket }
+});
 
 async function sendDailyDigest() {
     console.log("🚀 Starting Morning Digest Automation...");
