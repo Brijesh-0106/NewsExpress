@@ -9,8 +9,8 @@ global.WebSocket = WebSocket;
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a"; 
-const emailjsServiceId = "service_v1v057d";
-const emailjsTemplateId = "template_u19k93u";
+const emailjsServiceId = "service_a3rk1ym";
+const emailjsTemplateId = "template_3shbz28";
 const emailjsPublicKey = "BerIYcUUdRExUBbPA";
 const emailjsPrivateKey = process.env.REACT_APP_EMAILJS_PRIVATE_KEY;
 
