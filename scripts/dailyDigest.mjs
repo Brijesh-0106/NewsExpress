@@ -2,6 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import WebSocket from 'ws';
 
+// Inject WebSocket globally for Node.js compatibility
+global.WebSocket = WebSocket;
+
 // We use environment variables that will be provided by GitHub Actions
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -11,10 +14,9 @@ const emailjsTemplateId = "template_u19k93u";
 const emailjsPublicKey = "BerIYcUUdRExUBbPA";
 const emailjsPrivateKey = process.env.REACT_APP_EMAILJS_PRIVATE_KEY;
 
-// Initialize Supabase with WebSocket support for Node.js
+// Initialize Supabase with global WebSocket and disabled persistence
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false },
-    realtime: { websocket: WebSocket }
+    auth: { persistSession: false }
 });
 
 async function sendDailyDigest() {
