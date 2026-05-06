@@ -25,7 +25,7 @@ const MainNews = ({ country, category, pageSize }) => {
                 url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a`;
             }
 
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             const parsedData = await response.json();
 
