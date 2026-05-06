@@ -1,50 +1,80 @@
-import React, { Component } from 'react'
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+const NavBar = () => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const location = useLocation();
+    const navigate = useNavigate();
 
-export class NavBar extends Component {
-    render() {
-        return (
-            <div>
-                <nav className="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
-                    <div className="container-fluid text-light">
-                        <Link className="navbar-brand mx-1 text-light" to="/">Navbar</Link>
-                        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                            <span className="navbar-toggler-icon"></span>
-                        </button>
-                        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/">Home</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Business">Business</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Entertainment">Entertainment</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/General">General</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Health">Health</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Technology">Technology</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Science">Science</Link>
-                                </li>
-                                <li className="nav-item mx-2">
-                                    <Link className="nav-link text-light" aria-current="page" to="/Sports">Sports</Link>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-        )
-    }
-}
+    const categories = [
+        { name: 'General', path: '/' },
+        { name: 'Business', path: '/business' },
+        { name: 'Entertainment', path: '/entertainment' },
+        { name: 'Health', path: '/health' },
+        { name: 'Science', path: '/science' },
+        { name: 'Sports', path: '/sports' },
+        { name: 'Technology', path: '/technology' },
+    ];
 
-export default NavBar
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery("");
+        }
+    };
+
+    const handleLiveUpdates = () => {
+        const btn = document.getElementById('live-btn');
+        btn.innerText = "Checking...";
+        setTimeout(() => {
+            btn.innerText = "No New Alerts";
+            setTimeout(() => {
+                btn.innerText = "Live Updates";
+            }, 2000);
+        }, 1500);
+    };
+
+    return (
+        <div className="navbar-wrapper">
+            <nav className="modern-nav">
+                <Link className="nav-brand" to="/">NewsExpress</Link>
+
+                <ul className="nav-links">
+                    {categories.map((cat) => (
+                        <li key={cat.path}>
+                            <Link
+                                className={`nav-link ${location.pathname === cat.path ? 'active' : ''}`}
+                                to={cat.path}
+                            >
+                                {cat.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+
+                <div className="search-container">
+                    <form onSubmit={handleSearch} className="search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Search topics..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </form>
+
+                    <button id="live-btn" className="live-btn" onClick={handleLiveUpdates}>
+                        Live Updates
+                    </button>
+                </div>
+            </nav>
+        </div>
+    );
+};
+
+export default NavBar;
