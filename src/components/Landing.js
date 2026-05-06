@@ -45,7 +45,7 @@ const Landing = () => {
         <div className="landing-container">
             {/* Hero Section */}
             <section className="hero-section">
-                <div className="hero-badge">Now Powered by GPT-4o & Pinecone</div>
+
                 <h1 className="hero-title">
                     The Future of News <br />
                     <span className="accent-text">Redefined by Intelligence</span>

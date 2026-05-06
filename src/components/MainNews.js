@@ -18,6 +18,64 @@ const SkeletonCard = () => (
     </div>
 );
 
+const SubscriptionModal = ({ isOpen, onClose, email, setEmail, status, onSubscribe }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <button className="close-modal" onClick={onClose}>✕</button>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        background: 'var(--accent-glow)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 25px',
+                        border: '1px solid var(--accent)'
+                    }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '32px', fontWeight: 800, marginBottom: '15px', color: 'white' }}>
+                        Morning <span style={{ color: 'var(--accent)' }}>Digest</span>
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '30px', lineHeight: '1.6' }}>
+                        Join 100,000+ readers. Get the most important stories delivered to your inbox every morning for free.
+                    </p>
+                    <form onSubmit={onSubscribe} className="subscription-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="modal-input"
+                            required
+                        />
+                        <button type="submit" className="sub-btn" style={{ height: '56px', width: '100%' }}>
+                            {status === "loading" ? "Processing..." : "Subscribe Now"}
+                        </button>
+                    </form>
+                    {status === "success" && (
+                        <p style={{ marginTop: '20px', color: '#22c55e', fontWeight: 700, fontSize: '14px' }}>
+                            ✓ Welcome! Check your inbox soon.
+                        </p>
+                    )}
+                    {status === "error" && (
+                        <p style={{ marginTop: '20px', color: '#ef4444', fontWeight: 700, fontSize: '14px' }}>
+                            ! Error sending email. Please try again later.
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const MainNews = ({ country, category, pageSize }) => {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -35,9 +93,9 @@ const MainNews = ({ country, category, pageSize }) => {
         try {
             let url;
             if (searchQuery) {
-                url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&searchIn=title,description&sortBy=relevancy&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a&cb=${Date.now()}`;
+                url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&searchIn=title,description&sortBy=relevancy&page=${page}&pageSize=${pageSize}&apiKey=9b8e226f60a74866aa4af26f6622f07a&cb=${Date.now()}`;
             } else {
-                url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a&cb=${Date.now()}`;
+                url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=9b8e226f60a74866aa4af26f6622f07a&cb=${Date.now()}`;
             }
 
             const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
@@ -91,8 +149,6 @@ const MainNews = ({ country, category, pageSize }) => {
         if (!subEmail) return;
         setSubStatus("loading");
 
-        // --- REAL EMAIL IMPLEMENTATION ---
-        // Sends top 5 headlines as requested
         const success = await sendWelcomeEmail(subEmail, articles);
 
         if (success) {
@@ -103,6 +159,8 @@ const MainNews = ({ country, category, pageSize }) => {
         }
     };
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
     return (
@@ -110,39 +168,42 @@ const MainNews = ({ country, category, pageSize }) => {
             {/* AI Assistant Integration */}
             <NewsAssistant articles={articles} />
 
+            <SubscriptionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                email={subEmail}
+                setEmail={setSubEmail}
+                status={subStatus}
+                onSubscribe={handleSubscribe}
+            />
+
             <div className="container" style={{ textAlign: 'center', marginBottom: '60px' }}>
                 <span style={{ color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '12px' }}>
                     {searchQuery ? "Direct Results" : "Top Stories"}
                 </span>
-                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, marginTop: '10px' }}>
+                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, marginTop: '10px', marginBottom: '20px' }}>
                     {searchQuery ? `"${searchQuery}"` : (category === 'general' && !localStorage.getItem('news_favorite_category') ? 'Headlines' : capitalize(category))}
                 </h1>
-                
-                {!searchQuery && (
-                    <button 
-                        onClick={() => {
-                            localStorage.setItem('news_favorite_category', category);
-                            window.location.href = '/';
-                        }}
-                        style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid var(--border)',
-                            color: localStorage.getItem('news_favorite_category') === category ? 'var(--accent)' : 'var(--text-secondary)',
-                            padding: '6px 16px',
-                            borderRadius: '20px',
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            marginTop: '20px',
-                            fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        {localStorage.getItem('news_favorite_category') === category ? '★ Your Default Feed' : '☆ Set as Default Feed'}
-                    </button>
-                )}
+
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="sub-btn"
+                    style={{
+                        fontSize: '14px',
+                        padding: '12px 24px',
+                        borderRadius: '100px',
+                        background: 'rgba(79, 70, 229, 0.1)',
+                        border: '1px solid var(--accent)',
+                        color: 'var(--accent)',
+                        boxShadow: 'none'
+                    }}
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Subscribe to Digest
+                </button>
             </div>
 
             {searchQuery && articles.length > 0 && (
@@ -192,47 +253,6 @@ const MainNews = ({ country, category, pageSize }) => {
                             <div style={{ width: '30px', height: '30px', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s infinite linear' }}></div>
                         </div>
                     )}
-
-                    {/* Subscription Section */}
-                    <div style={{
-                        maxWidth: '1200px',
-                        margin: '80px auto',
-                        padding: '60px 40px',
-                        background: 'linear-gradient(135deg, #12121e 0%, #050508 100%)',
-                        borderRadius: '30px',
-                        border: '1px solid var(--border)',
-                        textAlign: 'center'
-                    }}>
-                        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '32px', fontWeight: 800, marginBottom: '15px' }}>
-                            Morning <span style={{ color: 'var(--accent)' }}>Digest</span>
-                        </h2>
-                        <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 30px' }}>
-                            Get the most important stories of the day delivered to your inbox every morning for free.
-                        </p>
-                        <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '15px', justifyContent: 'center', maxWidth: '500px', margin: '0 auto' }}>
-                            <input
-                                type="email"
-                                placeholder="Enter your email"
-                                value={subEmail}
-                                onChange={(e) => setSubEmail(e.target.value)}
-                                style={{ flex: 1, padding: '15px 20px', borderRadius: '15px', border: '1px solid var(--border)', background: '#050508', color: 'white', outline: 'none' }}
-                                required
-                            />
-                            <button type="submit" className="live-btn" style={{ padding: '0 30px', background: 'var(--accent)', borderColor: 'var(--accent)' }}>
-                                {subStatus === "loading" ? "..." : "Subscribe"}
-                            </button>
-                        </form>
-                        {subStatus === "success" && (
-                            <p style={{ marginTop: '20px', color: '#22c55e', fontWeight: 700, fontSize: '14px' }}>
-                                ✓ Subscription successful! Welcome email sent.
-                            </p>
-                        )}
-                        {subStatus === "error" && (
-                            <p style={{ marginTop: '20px', color: '#ef4444', fontWeight: 700, fontSize: '14px' }}>
-                                ! Error sending email. Check console or EmailService.js config.
-                            </p>
-                        )}
-                    </div>
                 </>
             )}
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

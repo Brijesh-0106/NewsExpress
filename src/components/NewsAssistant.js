@@ -126,26 +126,36 @@ const NewsAssistant = ({ articles }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [localVectors]); // Depend on localVectors so handleSend uses the latest state
 
+    const indexingRef = useRef(false);
+
     useEffect(() => {
         const indexData = async () => {
-            if (articles.length > 0) {
-                // Only index articles that haven't been indexed yet (by URL)
-                const existingUrls = new Set(localVectors.map(v => atob(v.id))); // IDs are base64 URLs
-                const newArticles = articles.filter(art => !existingUrls.has(art.url));
+            if (articles.length > 0 && !indexingRef.current) {
+                // Only index the first 10 articles initially, then others as they come
+                // This makes the initial load much faster
+                const articlesToIndex = articles.slice(0, page === 1 ? 10 : articles.length);
+                
+                const existingUrls = new Set(localVectors.map(v => atob(v.id)));
+                const newArticles = articlesToIndex.filter(art => !existingUrls.has(art.url));
 
                 if (newArticles.length === 0) return;
 
-                console.log(`Adding ${newArticles.length} new articles to index...`);
+                indexingRef.current = true;
+                console.log(`Optimized Indexing: Adding ${newArticles.length} articles...`);
                 try {
                     const newVectors = await indexArticles(newArticles);
                     setLocalVectors(prev => [...prev, ...newVectors]);
                 } catch (e) {
                     console.error("Indexing failed:", e);
+                } finally {
+                    indexingRef.current = false;
                 }
             }
         };
         indexData();
-    }, [articles, localVectors]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [articles]); // Only re-run when articles array reference changes
+
 
     const handleScroll = (e) => {
         const container = e.target;
