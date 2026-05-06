@@ -20,12 +20,12 @@ const MainNews = ({ country, category, pageSize }) => {
         try {
             let url;
             if (searchQuery) {
-                url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&searchIn=title,description&sortBy=relevancy&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a`;
+                url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&searchIn=title,description&sortBy=relevancy&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a&cb=${Date.now()}`;
             } else {
-                url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a`;
+                url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=b57993e36b9748e381c44cca8b6c025a&cb=${Date.now()}`;
             }
 
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             const parsedData = await response.json();
 
