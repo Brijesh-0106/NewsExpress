@@ -133,7 +133,7 @@ const NewsAssistant = ({ articles }) => {
             if (articles.length > 0 && !indexingRef.current) {
                 // Only index the first 10 articles initially, then others as they come
                 // This makes the initial load much faster
-                const articlesToIndex = articles.slice(0, page === 1 ? 10 : articles.length);
+                const articlesToIndex = articles.slice(0, localVectors.length === 0 ? 10 : articles.length);
                 
                 const existingUrls = new Set(localVectors.map(v => atob(v.id)));
                 const newArticles = articlesToIndex.filter(art => !existingUrls.has(art.url));
