@@ -2,9 +2,8 @@ name: Morning Digest Automation
 
 on:
   schedule:
-    # This runs at 08:00 AM UTC every day
-    # You can change this to your preferred time
-    - cron: '0 8 * * *'
+    # This runs at 08:00 AM IST (02:30 AM UTC) every day
+    - cron: '30 2 * * *'
   workflow_dispatch: # Allows you to run it manually from the Actions tab
 
 jobs:
