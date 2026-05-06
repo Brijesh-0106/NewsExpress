@@ -38,7 +38,10 @@ const NavBar = () => {
     return (
         <div className="navbar-wrapper">
             <nav className="modern-nav">
-                <Link className="nav-brand" to="/">NewsExpress</Link>
+                <Link className="nav-brand" to="/">
+                    <img src="/favicon.svg" alt="Logo" style={{ width: '28px', height: '28px' }} />
+                    NewsExpress
+                </Link>
 
                 <ul className="nav-links">
                     {categories.map((cat) => (

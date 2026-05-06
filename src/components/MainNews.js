@@ -1,8 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import NewsItem from './NewsItem';
 import NewsAssistant from './NewsAssistant';
 import { sendWelcomeEmail } from '../services/EmailService';
+
+const SkeletonCard = () => (
+    <div className="news-card-wrapper" style={{ position: 'relative' }}>
+        <div className="news-card" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', padding: '0', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '220px', background: 'rgba(255,255,255,0.03)', animation: 'pulse 1.5s infinite' }} />
+            <div style={{ padding: '20px' }}>
+                <div style={{ width: '30%', height: '12px', background: 'rgba(255,255,255,0.03)', marginBottom: '15px', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ width: '100%', height: '20px', background: 'rgba(255,255,255,0.05)', marginBottom: '10px', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ width: '80%', height: '20px', background: 'rgba(255,255,255,0.05)', marginBottom: '20px', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ width: '100%', height: '60px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+            </div>
+        </div>
+    </div>
+);
 
 const MainNews = ({ country, category, pageSize }) => {
     const [articles, setArticles] = useState([]);
@@ -12,6 +26,7 @@ const MainNews = ({ country, category, pageSize }) => {
     const [subEmail, setSubEmail] = useState("");
     const [subStatus, setSubStatus] = useState(null);
     const [searchParams] = useSearchParams();
+    const observerTarget = useRef(null);
 
     const searchQuery = searchParams.get('q');
 
@@ -36,7 +51,7 @@ const MainNews = ({ country, category, pageSize }) => {
                         art.description?.toLowerCase().includes(searchQuery.toLowerCase()))
                     : (parsedData.articles || []);
 
-                setArticles(filtered);
+                setArticles(prev => page === 1 ? filtered : [...prev, ...filtered]);
                 setTotalResults(parsedData.totalResults || 0);
             }
         } catch (error) {
@@ -51,8 +66,24 @@ const MainNews = ({ country, category, pageSize }) => {
 
     useEffect(() => {
         fetchNews();
-        window.scrollTo(0, 0);
     }, [fetchNews]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && !loading && articles.length < totalResults) {
+                    setPage(prev => prev + 1);
+                }
+            },
+            { threshold: 1.0 }
+        );
+
+        if (observerTarget.current) observer.observe(observerTarget.current);
+
+        return () => {
+            if (observerTarget.current) observer.unobserve(observerTarget.current);
+        };
+    }, [loading, articles.length, totalResults]);
 
     const handleSubscribe = async (e) => {
         e.preventDefault();
@@ -83,13 +114,51 @@ const MainNews = ({ country, category, pageSize }) => {
                     {searchQuery ? "Direct Results" : "Top Stories"}
                 </span>
                 <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, marginTop: '10px' }}>
-                    {searchQuery ? `"${searchQuery}"` : (category === 'general' ? 'Headlines' : capitalize(category))}
+                    {searchQuery ? `"${searchQuery}"` : (category === 'general' && !localStorage.getItem('news_favorite_category') ? 'Headlines' : capitalize(category))}
                 </h1>
+                
+                {!searchQuery && (
+                    <button 
+                        onClick={() => {
+                            localStorage.setItem('news_favorite_category', category);
+                            window.location.href = '/';
+                        }}
+                        style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid var(--border)',
+                            color: localStorage.getItem('news_favorite_category') === category ? 'var(--accent)' : 'var(--text-secondary)',
+                            padding: '6px 16px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            marginTop: '20px',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        {localStorage.getItem('news_favorite_category') === category ? '★ Your Default Feed' : '☆ Set as Default Feed'}
+                    </button>
+                )}
             </div>
 
-            {loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
-                    <div style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s infinite linear' }}></div>
+            {searchQuery && articles.length > 0 && (
+                <div style={{ maxWidth: '800px', margin: '0 auto 40px', background: 'rgba(79, 70, 229, 0.1)', border: '1px solid var(--accent)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ fontSize: '16px', color: 'white', fontWeight: 700, margin: '0 0 5px' }}>✨ Deep Search with NOVA AI</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>Ask our AI assistant to summarize or find specific insights about "{searchQuery}".</p>
+                    </div>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: `Summarize articles related to ${searchQuery}` }))} className="live-btn" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>
+                        Ask AI
+                    </button>
+                </div>
+            )}
+
+            {loading && page === 1 ? (
+                <div className="news-grid" style={{ paddingTop: '20px' }}>
+                    {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
                 </div>
             ) : (
                 <>
@@ -116,10 +185,10 @@ const MainNews = ({ country, category, pageSize }) => {
                         </div>
                     )}
 
-                    {totalResults > pageSize && (
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', paddingBottom: '60px' }}>
-                            <button disabled={page <= 1} className="live-btn" onClick={() => setPage(page - 1)}>Previous</button>
-                            <button disabled={page >= Math.ceil(totalResults / pageSize)} className="live-btn" onClick={() => setPage(page + 1)}>Next</button>
+                    {/* Infinite Scroll Observer Target */}
+                    {articles.length > 0 && articles.length < totalResults && (
+                        <div ref={observerTarget} style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                            <div style={{ width: '30px', height: '30px', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s infinite linear' }}></div>
                         </div>
                     )}
 

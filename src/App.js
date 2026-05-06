@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 const App = () => {
   const pageSize = 12; // Adjusted for Pinterest layout
   const country = 'us';
+  const favoriteCategory = localStorage.getItem('news_favorite_category') || 'general';
 
   return (
     <Router>
@@ -15,7 +16,7 @@ const App = () => {
 
         <main>
           <Routes>
-            <Route path='/' element={<MainNews key='general' pageSize={pageSize} country={country} category='general' />} />
+            <Route path='/' element={<MainNews key={favoriteCategory} pageSize={pageSize} country={country} category={favoriteCategory} />} />
             <Route path='/business' element={<MainNews key='business' pageSize={pageSize} country={country} category='business' />} />
             <Route path='/entertainment' element={<MainNews key='entertainment' pageSize={pageSize} country={country} category='entertainment' />} />
             <Route path='/health' element={<MainNews key='health' pageSize={pageSize} country={country} category='health' />} />
@@ -35,8 +36,9 @@ const App = () => {
           marginTop: '60px',
           background: 'rgba(0,0,0,0.3)'
         }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, marginBottom: '10px', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            NewsExpress
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <img src="/favicon.svg" alt="Logo" style={{ width: '24px', height: '24px' }} />
+            <span style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>NewsExpress</span>
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
             Elevating your news experience through premium design and real-time insights.
