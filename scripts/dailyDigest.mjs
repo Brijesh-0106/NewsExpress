@@ -8,7 +8,7 @@ global.WebSocket = WebSocket;
 // We use environment variables that will be provided by GitHub Actions
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a"; 
+const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a";
 const emailjsServiceId = "service_a3rk1ym";
 const emailjsTemplateId = "template_3shbz28";
 const emailjsPublicKey = "BerIYcUUdRExUBbPA";
@@ -65,7 +65,7 @@ async function sendDailyDigest() {
         // 4. Send email to each subscriber via EmailJS REST API
         for (const sub of subscribers) {
             console.log(`📧 Sending digest to ${sub.email}...`);
-            
+
             const emailResponse = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -76,6 +76,10 @@ async function sendDailyDigest() {
                     accessToken: emailjsPrivateKey,
                     template_params: {
                         to_email: sub.email,
+                        user_email: sub.email,
+                        reply_to: sub.email,
+                        from_name: "NewsExpress Intelligence",
+                        to_name: sub.email.split('@')[0],
                         name: sub.email.split('@')[0],
                         headline_html: headline_html,
                         site_url: "https://newsaunty.vercel.app",
