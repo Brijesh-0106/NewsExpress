@@ -1,0 +1,30 @@
+name: Morning Digest Automation
+
+on:
+  schedule:
+    # This runs at 08:00 AM UTC every day
+    # You can change this to your preferred time
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js node-fetch
+
+      - name: Run Digest Script
+        env:
+          REACT_APP_SUPABASE_URL: ${{ secrets.REACT_APP_SUPABASE_URL }}
+          REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.REACT_APP_SUPABASE_ANON_KEY }}
+          REACT_APP_EMAILJS_PRIVATE_KEY: ${{ secrets.REACT_APP_EMAILJS_PRIVATE_KEY }}
+        run: node scripts/dailyDigest.mjs

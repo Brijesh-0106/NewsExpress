@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import NewsItem from './NewsItem';
 import NewsAssistant from './NewsAssistant';
 import { sendWelcomeEmail } from '../services/EmailService';
+import { subscribeUser } from '../services/SupabaseService';
 
 const SkeletonCard = () => (
     <div className="news-card-wrapper" style={{ position: 'relative' }}>
@@ -149,9 +150,13 @@ const MainNews = ({ country, category, pageSize }) => {
         if (!subEmail) return;
         setSubStatus("loading");
 
-        const success = await sendWelcomeEmail(subEmail, articles);
+        // 1. Save to Supabase for the Daily Digest list
+        const { success: dbSuccess } = await subscribeUser(subEmail);
+        
+        // 2. Send the instant Welcome/First Digest via EmailJS
+        const emailSuccess = await sendWelcomeEmail(subEmail, articles);
 
-        if (success) {
+        if (dbSuccess && emailSuccess) {
             setSubStatus("success");
             setSubEmail("");
         } else {
