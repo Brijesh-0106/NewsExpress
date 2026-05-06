@@ -108,10 +108,8 @@ const MainNews = ({ country, category, pageSize }) => {
                                     more={element.url} 
                                     source={element.source.name}
                                     date={element.publishedAt}
-                                    onAskAI={(query) => {
-                                        // Need to trigger the NewsAssistant.
-                                        // A quick way is to emit a custom event.
-                                        window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: query }));
+                                    onAskAI={(articleData) => {
+                                        window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { action: 'context', data: articleData } }));
                                     }}
                                 />
                             ))}

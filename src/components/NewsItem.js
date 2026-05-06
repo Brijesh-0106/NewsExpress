@@ -55,7 +55,7 @@ const NewsItem = ({ title, detail, imageUrl, more, source, date, onAskAI }) => {
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                onAskAI(`Tell me more about: ${title}`);
+                                onAskAI({ title, detail, source, date });
                             }}
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
