@@ -1,6 +1,6 @@
 <div align="center">
   <!-- Placeholder for a Hero Banner Image -->
-  <img src="https://via.placeholder.com/1200x400/1a1a1a/ffffff?text=NewsExpress+-+Dark+Luxury+News" alt="NewsExpress Banner" width="100%" />
+  <img src="./public/newsExpressBanner.png" alt="NewsExpress Banner" width="100%" />
 
   # 🚀 NewsExpress
 
@@ -42,18 +42,18 @@
 
 ## 📸 Visuals
 
-*(Note: Replace the placeholder URLs below with your actual project screenshots by uploading them to an `assets` folder or directly into GitHub issues/PRs and pasting the link).*
+
 
 ### 🖥️ Website Interface
-<img src="https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Add+Website+Screenshot+Here" alt="Website UI Screenshot" width="100%" />
+<img src="./public/websiteUISS.png" alt="Website UI Screenshot" width="100%" />
 
 ### 📱 Mobile Experience
 <div align="center">
-  <img src="https://via.placeholder.com/300x600/1a1a1a/ffffff?text=Mobile+UI+Screenshot" alt="Mobile UI" width="30%" />
+  <img src="./public/mobileUISS.png" alt="Mobile UI" width="30%" />
 </div>
 
 ### ✉️ Automated Morning Digest Email
-<img src="https://via.placeholder.com/800x400/1a1a1a/ffffff?text=Add+Email+Digest+Screenshot+Here" alt="Email Digest Screenshot" width="100%" />
+<img src="./public/MailUISS.png" alt="Email Digest Screenshot" width="100%" />
 
 ---
 
