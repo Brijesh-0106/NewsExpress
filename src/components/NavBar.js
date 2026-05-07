@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const NavBar = () => {
+const NavBar = ({ onCountryChange, currentCountry, onLanguageChange, currentLanguage }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const location = useLocation();
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const q = params.get('q');
+        if (q) {
+            setSearchQuery(q);
+        } else {
+            setSearchQuery("");
+        }
+    }, [location.search]);
 
     const categories = [
         { name: 'Top Stories', path: '/feed' },
@@ -16,23 +26,36 @@ const NavBar = () => {
         { name: 'Technology', path: '/technology' },
     ];
 
+    const countries = [
+        { code: 'us', name: 'USA' },
+        { code: 'in', name: 'India' },
+        { code: 'gb', name: 'UK' },
+        { code: 'ca', name: 'Canada' },
+        { code: 'au', name: 'Australia' },
+    ];
+
+    const languages = [
+        { code: '', name: 'Any Language' },
+        { code: 'en', name: 'English' },
+        { code: 'hi', name: 'Hindi' },
+        { code: 'gu', name: 'Gujarati' },
+        { code: 'es', name: 'Spanish' },
+        { code: 'fr', name: 'French' },
+        { code: 'de', name: 'German' },
+        { code: 'ar', name: 'Arabic' },
+        { code: 'jp', name: 'Japanese' }
+    ];
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-            setSearchQuery("");
         }
     };
 
-    const handleLiveUpdates = () => {
-        const btn = document.getElementById('live-btn');
-        btn.innerText = "Checking...";
-        setTimeout(() => {
-            btn.innerText = "No New Alerts";
-            setTimeout(() => {
-                btn.innerText = "Live Updates";
-            }, 2000);
-        }, 1500);
+    const handleClearSearch = () => {
+        setSearchQuery("");
+        navigate('/feed');
     };
 
     return (
@@ -57,6 +80,28 @@ const NavBar = () => {
                 </ul>
 
                 <div className="search-container">
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <select 
+                            className="country-select" 
+                            value={currentCountry} 
+                            onChange={(e) => onCountryChange(e.target.value)}
+                        >
+                            {countries.map(c => (
+                                <option key={c.code} value={c.code}>{c.name}</option>
+                            ))}
+                        </select>
+
+                        <select 
+                            className="country-select" 
+                            value={currentLanguage} 
+                            onChange={(e) => onLanguageChange(e.target.value)}
+                        >
+                            {languages.map(l => (
+                                <option key={l.code} value={l.code}>{l.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <form onSubmit={handleSearch} className="search-box">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
@@ -65,15 +110,32 @@ const NavBar = () => {
                         <input
                             type="text"
                             className="search-input"
-                            placeholder="Search topics..."
+                            placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                        {searchQuery && (
+                            <button 
+                                type="button" 
+                                onClick={handleClearSearch}
+                                style={{ 
+                                    background: 'transparent', 
+                                    border: 'none', 
+                                    color: 'var(--text-secondary)', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    padding: '0'
+                                }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        )}
                     </form>
-
-                    <button id="live-btn" className="live-btn" onClick={handleLiveUpdates}>
-                        Live Updates
-                    </button>
                 </div>
             </nav>
         </div>

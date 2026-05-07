@@ -7,27 +7,28 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App = () => {
   const pageSize = 12; // Adjusted for Pinterest layout
-  const country = 'us';
+  const [country, setCountry] = React.useState('us');
+  const [language, setLanguage] = React.useState('');
   const favoriteCategory = localStorage.getItem('news_favorite_category') || 'general';
 
   return (
     <Router>
       <div className="app-wrapper">
-        <NavBar />
+        <NavBar onCountryChange={setCountry} currentCountry={country} onLanguageChange={setLanguage} currentLanguage={language} />
 
         <main>
           <Routes>
             <Route path='/' element={<Landing />} />
-            <Route path='/feed' element={<MainNews key={favoriteCategory} pageSize={pageSize} country={country} category={favoriteCategory} />} />
-            <Route path='/business' element={<MainNews key='business' pageSize={pageSize} country={country} category='business' />} />
-            <Route path='/entertainment' element={<MainNews key='entertainment' pageSize={pageSize} country={country} category='entertainment' />} />
-            <Route path='/health' element={<MainNews key='health' pageSize={pageSize} country={country} category='health' />} />
-            <Route path='/science' element={<MainNews key='science' pageSize={pageSize} country={country} category='science' />} />
-            <Route path='/sports' element={<MainNews key='sports' pageSize={pageSize} country={country} category='sports' />} />
-            <Route path='/technology' element={<MainNews key='technology' pageSize={pageSize} country={country} category='technology' />} />
+            <Route path='/feed' element={<MainNews key={`${favoriteCategory}-${country}-${language}`} pageSize={pageSize} country={country} language={language} category={favoriteCategory} />} />
+            <Route path='/business' element={<MainNews key={`business-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='business' />} />
+            <Route path='/entertainment' element={<MainNews key={`entertainment-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='entertainment' />} />
+            <Route path='/health' element={<MainNews key={`health-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='health' />} />
+            <Route path='/science' element={<MainNews key={`science-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='science' />} />
+            <Route path='/sports' element={<MainNews key={`sports-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='sports' />} />
+            <Route path='/technology' element={<MainNews key={`technology-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='technology' />} />
 
             {/* Search Route */}
-            <Route path='/search' element={<MainNews key='search' pageSize={pageSize} country={country} category='general' />} />
+            <Route path='/search' element={<MainNews key={`search-${country}-${language}`} pageSize={pageSize} country={country} language={language} category='general' />} />
           </Routes>
         </main>
 

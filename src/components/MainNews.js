@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import NewsItem from './NewsItem';
 import NewsAssistant from './NewsAssistant';
@@ -77,11 +77,11 @@ const SubscriptionModal = ({ isOpen, onClose, email, setEmail, status, onSubscri
     );
 };
 
-const MainNews = ({ country, category, pageSize }) => {
+const MainNews = ({ country, category, language, pageSize }) => {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [totalResults, setTotalResults] = useState(0);
+    const [nextPageToken, setNextPageToken] = useState(null);
+    const [fetchTrigger, setFetchTrigger] = useState(0);
     const [subEmail, setSubEmail] = useState("");
     const [subStatus, setSubStatus] = useState(null);
     const [searchParams] = useSearchParams();
@@ -89,50 +89,87 @@ const MainNews = ({ country, category, pageSize }) => {
 
     const searchQuery = searchParams.get('q');
 
-    const fetchNews = useCallback(async () => {
-        setLoading(true);
-        try {
-            let url;
-            if (searchQuery) {
-                url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&searchIn=title,description&sortBy=relevancy&page=${page}&pageSize=${pageSize}&apiKey=9b8e226f60a74866aa4af26f6622f07a&cb=${Date.now()}`;
-            } else {
-                url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=9b8e226f60a74866aa4af26f6622f07a&cb=${Date.now()}`;
-            }
-
-            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
-            const response = await fetch(proxyUrl);
-            const parsedData = await response.json();
-
-            if (parsedData.status === "ok") {
-                const filtered = searchQuery
-                    ? (parsedData.articles || []).filter(art =>
-                        art.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        art.description?.toLowerCase().includes(searchQuery.toLowerCase()))
-                    : (parsedData.articles || []);
-
-                setArticles(prev => page === 1 ? filtered : [...prev, ...filtered]);
-                setTotalResults(parsedData.totalResults || 0);
-            }
-        } catch (error) {
-            console.error("Error fetching news:", error);
-        }
-        setLoading(false);
-    }, [country, category, page, pageSize, searchQuery]);
+    // Reset state when filters change
+    useEffect(() => {
+        setArticles([]);
+        setNextPageToken(null);
+        setFetchTrigger(0);
+    }, [category, searchQuery, country, language]);
 
     useEffect(() => {
-        setPage(1);
-    }, [category, searchQuery]);
+        const loadNews = async () => {
+            setLoading(true);
+            try {
+                const apiKey = 'pub_1bbce5ce88d447c4a12a4869bb50523f';
+                let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&image=1&size=10`;
+                
+                if (language) {
+                    url += `&language=${language}`;
+                }
+                
+                if (searchQuery) {
+                    url += `&q=${encodeURIComponent(searchQuery)}`;
+                } else {
+                    const ndCategory = category === 'general' ? 'top' : category;
+                    url += `&country=${country}&category=${ndCategory}`;
+                }
 
-    useEffect(() => {
-        fetchNews();
-    }, [fetchNews]);
+                if (fetchTrigger > 0 && nextPageToken) {
+                    url += `&page=${nextPageToken}`;
+                }
+
+                const response = await fetch(url);
+                const parsedData = await response.json();
+
+                if (parsedData.status === "success") {
+                    let apiResults = parsedData.results || [];
+                    
+                    // Strict country frontend filter to fix API bleeding bugs
+                    if (!searchQuery) {
+                        const countryMap = {
+                            'us': 'united states of america',
+                            'in': 'india',
+                            'gb': 'united kingdom',
+                            'ca': 'canada',
+                            'au': 'australia'
+                        };
+                        const targetCountryName = countryMap[country];
+                        if (targetCountryName) {
+                            apiResults = apiResults.filter(item => {
+                                if (!item.country || !Array.isArray(item.country)) return true;
+                                return item.country.some(c => c.toLowerCase() === targetCountryName);
+                            });
+                        }
+                    }
+
+                    const mappedResults = apiResults.map(item => ({
+                        title: item.title,
+                        description: item.description,
+                        url: item.link,
+                        urlToImage: item.image_url,
+                        publishedAt: item.pubDate,
+                        source: { name: item.source_id }
+                    }));
+
+                    setArticles(prev => fetchTrigger === 0 ? mappedResults : [...prev, ...mappedResults]);
+                    setNextPageToken(parsedData.nextPage || null);
+                }
+            } catch (error) {
+                console.error("Error fetching news:", error);
+            }
+            setLoading(false);
+        };
+
+        loadNews();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fetchTrigger, category, searchQuery, country, language]); // Re-fetch when these change
 
     useEffect(() => {
         const currentTarget = observerTarget.current;
         const observer = new IntersectionObserver(
             entries => {
-                if (entries[0].isIntersecting && !loading && articles.length < totalResults) {
-                    setPage(prev => prev + 1);
+                if (entries[0].isIntersecting && !loading && nextPageToken) {
+                    setFetchTrigger(prev => prev + 1);
                 }
             },
             { threshold: 1.0 }
@@ -143,7 +180,7 @@ const MainNews = ({ country, category, pageSize }) => {
         return () => {
             if (currentTarget) observer.unobserve(currentTarget);
         };
-    }, [loading, articles.length, totalResults]);
+    }, [loading, nextPageToken]);
 
     const handleSubscribe = async (e) => {
         e.preventDefault();
@@ -190,40 +227,45 @@ const MainNews = ({ country, category, pageSize }) => {
                     {searchQuery ? `"${searchQuery}"` : (category === 'general' && !localStorage.getItem('news_favorite_category') ? 'Headlines' : capitalize(category))}
                 </h1>
 
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="sub-btn"
-                    style={{
-                        fontSize: '14px',
-                        padding: '12px 24px',
-                        borderRadius: '100px',
-                        background: 'rgba(79, 70, 229, 0.1)',
-                        border: '1px solid var(--accent)',
-                        color: 'var(--accent)',
-                        boxShadow: 'none'
-                    }}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                    Subscribe to Digest
-                </button>
+                {!searchQuery && (
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="sub-btn"
+                        style={{
+                            fontSize: '14px',
+                            padding: '12px 24px',
+                            borderRadius: '100px',
+                            background: 'rgba(79, 70, 229, 0.1)',
+                            border: '1px solid var(--accent)',
+                            color: 'var(--accent)',
+                            boxShadow: 'none'
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        Subscribe to Digest
+                    </button>
+                )}
             </div>
 
             {searchQuery && articles.length > 0 && (
-                <div style={{ maxWidth: '800px', margin: '0 auto 40px', background: 'rgba(79, 70, 229, 0.1)', border: '1px solid var(--accent)', borderRadius: '16px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h3 style={{ fontSize: '16px', color: 'white', fontWeight: 700, margin: '0 0 5px' }}>✨ Deep Search with NOVA AI</h3>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>Ask our AI assistant to summarize or find specific insights about "{searchQuery}".</p>
+                <div className="ai-search-banner">
+                    <div className="ai-search-content">
+                        <h3 className="ai-search-title">✨ Deep Search with NOVA AI</h3>
+                        <p className="ai-search-text">Ask our AI assistant to summarize or find specific insights about "{searchQuery}".</p>
                     </div>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: `Summarize articles related to ${searchQuery}` }))} className="live-btn" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>
-                        Ask AI
+                    <button 
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: `Summarize articles related to ${searchQuery}` }))} 
+                        className="ai-search-btn"
+                    >
+                        Ask AI Assistant
                     </button>
                 </div>
             )}
 
-            {loading && page === 1 ? (
+            {loading && fetchTrigger === 0 ? (
                 <div className="news-grid" style={{ paddingTop: '20px' }}>
                     {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
                 </div>
@@ -253,7 +295,7 @@ const MainNews = ({ country, category, pageSize }) => {
                     )}
 
                     {/* Infinite Scroll Observer Target */}
-                    {articles.length > 0 && articles.length < totalResults && (
+                    {articles.length > 0 && nextPageToken && (
                         <div ref={observerTarget} style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
                             <div style={{ width: '30px', height: '30px', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s infinite linear' }}></div>
                         </div>

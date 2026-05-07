@@ -64,7 +64,9 @@
 .search-container {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .search-box {
@@ -132,6 +134,30 @@
   font-size: 14px;
 }
 
+.country-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+  font-family: var(--font-body);
+}
+
+.country-select:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.country-select option {
+  background: var(--bg-card);
+  color: white;
+}
+
 .live-btn {
   background: transparent;
   border: 1px solid var(--border);
@@ -176,6 +202,58 @@
 
 .sub-btn:active {
   transform: translateY(0) scale(0.98);
+}
+
+/* AI Search Banner */
+.ai-search-banner {
+  max-width: 800px;
+  margin: 0 auto 40px;
+  background: rgba(79, 70, 229, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.ai-search-content {
+  flex: 1;
+  min-width: 280px;
+}
+
+.ai-search-title {
+  font-size: 18px;
+  color: white;
+  fontWeight: 700;
+  margin: 0 0 8px;
+}
+
+.ai-search-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ai-search-btn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-search-btn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
 }
 
 /* Subscription Modal Styles */
@@ -309,6 +387,8 @@
     background: rgba(255, 255, 255, 0.02);
     border-top: 1px solid var(--border);
     gap: 8px;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
   .nav-link {
     white-space: nowrap;
@@ -326,5 +406,27 @@
   .subscription-form input, 
   .subscription-form button {
     width: 100% !important;
+  }
+
+  .ai-search-banner {
+    flex-direction: column;
+    padding: 20px;
+    text-align: center;
+    gap: 16px;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .ai-search-content {
+    min-width: unset;
+  }
+
+  .ai-search-btn {
+    width: 100%;
+  }
+
+  .country-select {
+    font-size: 12px;
+    padding: 6px 8px;
   }
 }
