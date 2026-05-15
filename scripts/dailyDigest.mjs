@@ -8,7 +8,7 @@ global.WebSocket = WebSocket;
 // We use environment variables that will be provided by GitHub Actions
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const newsApiKey = "9b8e226f60a74866aa4af26f6622f07a";
+const newsdataApiKey = "pub_1bbce5ce88d447c4a12a4869bb50523f";
 const emailjsServiceId = "service_a3rk1ym";
 const emailjsTemplateId = "template_3shbz28";
 const emailjsPublicKey = "BerIYcUUdRExUBbPA";
@@ -36,13 +36,13 @@ async function sendDailyDigest() {
 
         console.log(`👥 Found ${subscribers.length} subscribers.`);
 
-        // 2. Fetch latest Top Headlines
-        // Replace line 40:
-        const newsUrl = `https://newsdata.io/api/1/news?apikey=pub_1bbce5ce88d447c4a12a4869bb50523f&image=1&size=5&country=in&category=top`;
+        // 2. Fetch latest Top Headlines from newsdata.io (same API as website)
+        const newsUrl = `https://newsdata.io/api/1/news?apikey=${newsdataApiKey}&image=1&size=5&country=in&category=top`;
 
         const newsResponse = await fetch(newsUrl);
         const newsData = await newsResponse.json();
-        const articles = newsData.articles || [];
+        // newsdata.io returns 'results', NOT 'articles'
+        const articles = newsData.results || [];
 
         if (articles.length === 0) {
             console.log("📰 No new articles found. Exiting.");
@@ -59,7 +59,7 @@ async function sendDailyDigest() {
                     ${h.title}
                 </div>
                 <div style="color: #64748b; font-size: 14px; line-height: 1.5;">
-                    ${h.description || 'Visit NewsExpress for the full coverage.'}
+                    ${h.description || h.content || 'Visit NewsExpress for the full coverage.'}
                 </div>
             </div>
         `).join('');
