@@ -77,7 +77,7 @@ const SubscriptionModal = ({ isOpen, onClose, email, setEmail, status, onSubscri
     );
 };
 
-const MainNews = ({ country, category, language, pageSize }) => {
+const MainNews = ({ user, country, category, language, pageSize }) => {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextPageToken, setNextPageToken] = useState(null);
@@ -102,11 +102,11 @@ const MainNews = ({ country, category, language, pageSize }) => {
             try {
                 const apiKey = 'pub_1bbce5ce88d447c4a12a4869bb50523f';
                 let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&image=1&size=10`;
-                
+
                 if (language) {
                     url += `&language=${language}`;
                 }
-                
+
                 if (searchQuery) {
                     url += `&q=${encodeURIComponent(searchQuery)}`;
                 } else {
@@ -123,7 +123,7 @@ const MainNews = ({ country, category, language, pageSize }) => {
 
                 if (parsedData.status === "success") {
                     let apiResults = parsedData.results || [];
-                    
+
                     // Strict country frontend filter to fix API bleeding bugs
                     if (!searchQuery) {
                         const countryMap = {
@@ -189,7 +189,7 @@ const MainNews = ({ country, category, language, pageSize }) => {
 
         // 1. Save to Supabase for the Daily Digest list
         const { success: dbSuccess } = await subscribeUser(subEmail);
-        
+
         // 2. Send the instant Welcome/First Digest via EmailJS
         const emailSuccess = await sendWelcomeEmail(subEmail, articles);
 
@@ -256,8 +256,8 @@ const MainNews = ({ country, category, language, pageSize }) => {
                         <h3 className="ai-search-title">✨ Deep Search with NOVA AI</h3>
                         <p className="ai-search-text">Ask our AI assistant to summarize or find specific insights about "{searchQuery}".</p>
                     </div>
-                    <button 
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: `Summarize articles related to ${searchQuery}` }))} 
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: `Summarize articles related to ${searchQuery}` }))}
                         className="ai-search-btn"
                     >
                         Ask AI Assistant
@@ -286,6 +286,7 @@ const MainNews = ({ country, category, language, pageSize }) => {
                                     more={element.url}
                                     source={element.source.name}
                                     date={element.publishedAt}
+                                    user={user}
                                     onAskAI={(articleData) => {
                                         window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { action: 'context', data: articleData } }));
                                     }}

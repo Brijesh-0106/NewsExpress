@@ -37,7 +37,9 @@ async function sendDailyDigest() {
         console.log(`👥 Found ${subscribers.length} subscribers.`);
 
         // 2. Fetch latest Top Headlines
-        const newsUrl = `https://newsapi.org/v2/top-headlines?country=us&pageSize=5&apiKey=${newsApiKey}`;
+        // Replace line 40:
+        const newsUrl = `https://newsdata.io/api/1/news?apikey=pub_1bbce5ce88d447c4a12a4869bb50523f&image=1&size=5&country=in&category=top`;
+
         const newsResponse = await fetch(newsUrl);
         const newsData = await newsResponse.json();
         const articles = newsData.articles || [];
