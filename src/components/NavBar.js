@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/SupabaseService';
-import { LogOut, Bookmark, User, Star, Globe } from 'lucide-react';
+import { LogOut, Bookmark, User, Star } from 'lucide-react';
 
 const NavBar = ({ user, onCountryChange, currentCountry, onLanguageChange, currentLanguage }) => {
     const [searchQuery, setSearchQuery] = useState("");
