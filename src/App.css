@@ -38,6 +38,14 @@
   padding: 6px;
   border-radius: 100px;
   border: 1px solid var(--border);
+  flex-shrink: 1;
+  min-width: 0; /* Critical: allows flex child to shrink below its content width! */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link {
@@ -45,9 +53,10 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 13px;
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 100px;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -65,7 +74,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
 }
 
@@ -343,11 +352,21 @@
 }
 
 /* Responsive Navbar */
-@media (max-width: 1100px) {
-  .search-input { width: 120px; }
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
+.auth-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Responsive Navbar */
+@media (max-width: 1000px) {
   .navbar-wrapper {
     padding: 12px 16px;
   }
@@ -355,19 +374,28 @@
     flex-wrap: wrap;
     height: auto;
     gap: 12px;
-    justify-content: center;
   }
   .nav-brand {
-    font-size: 20px;
+    order: 1;
     margin-right: auto;
   }
+  .nav-actions {
+    display: contents; /* This lets search and auth break out and act as direct children of modern-nav */
+  }
+  .auth-container {
+    order: 2;
+  }
   .search-container {
+    order: 3;
     width: 100%;
     justify-content: space-between;
-    order: 2;
+    flex-wrap: wrap; /* IMPORTANT: Allows mobile search input to drop below selects! */
   }
   .search-box {
     flex: 1;
+    margin-left: 0;
+    width: 100%;
+    min-width: 200px;
   }
   .search-input {
     width: 100%;
@@ -376,27 +404,23 @@
     display: none;
   }
   .nav-links {
-    display: flex;
-    order: 3;
-    width: calc(100% + 32px);
-    margin: 10px -16px 0;
-    overflow-x: auto;
+    order: 4;
+    width: 100%;
+    margin: 4px 0 0;
     justify-content: flex-start;
-    padding: 12px 16px;
-    -webkit-overflow-scrolling: touch;
-    background: rgba(255, 255, 255, 0.02);
+    padding: 12px 0;
+    border: none;
     border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
     gap: 8px;
     mask-image: linear-gradient(to right, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
   .nav-link {
     white-space: nowrap;
-    font-size: 12px;
+    font-size: 13px;
     padding: 6px 12px;
-  }
-  .nav-links::-webkit-scrollbar {
-    display: none;
   }
   
   /* Subscription form mobile fix */
