@@ -37,7 +37,7 @@ const NavBar = ({ user, onCountryChange, currentCountry, onLanguageChange, curre
     ];
 
     const languages = [
-        { code: '', name: 'Any Language' },
+        { code: '', name: 'All' },
         { code: 'en', name: 'English' },
         { code: 'hi', name: 'Hindi' },
         { code: 'gu', name: 'Gujarati' },
@@ -81,9 +81,9 @@ const NavBar = ({ user, onCountryChange, currentCountry, onLanguageChange, curre
                     NewsExpress
                 </Link>
 
-                <ul className="nav-links" style={{ marginLeft: '32px' }}>
+                <ul className="nav-links">
                     <li>
-                        <Link className={`nav-link ${location.pathname === '/foryou' ? 'active' : ''}`} to="/foryou" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <Link className={`nav-link ${location.pathname === '/foryou' ? 'active' : ''}`} to="/foryou">
                             <Star size={14} /> For You
                         </Link>
                     </li>
