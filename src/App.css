@@ -365,6 +365,26 @@
   gap: 15px;
 }
 
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  transition: var(--transition);
+  padding: 0;
+}
+
+.icon-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* Responsive Navbar */
 @media (max-width: 1000px) {
   .navbar-wrapper {
